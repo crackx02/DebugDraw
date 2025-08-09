@@ -29,7 +29,7 @@ static struct {
 	bool bMhInitialized = false;
 	DebugDrawManager debugDrawManager;
 	std::mutex setInjectedLuaStatesMutex;
-	std::set<void*> setInjectedLuaStates;
+	std::set<lua_State*> setInjectedLuaStates;
 } g_State;
 
 
@@ -43,7 +43,7 @@ static int H_luaL_loadstring(lua_State* L, const char* str) {
 		bool inject = false;
 		{
 			std::scoped_lock lock(g_State.setInjectedLuaStatesMutex);
-			inject = !g_State.setInjectedLuaStates.contains((void*)L);
+			inject = !g_State.setInjectedLuaStates.contains(L);
 		}
 
 		if ( inject ) {
@@ -53,7 +53,7 @@ static int H_luaL_loadstring(lua_State* L, const char* str) {
 				lua_pcall(L, 0, -1, 0);
 				res = O_luaL_loadstring(L, "unsafe_env.sm.debugDraw = sm.debugDraw");
 				std::scoped_lock lock(g_State.setInjectedLuaStatesMutex);
-				g_State.setInjectedLuaStates.insert((void*)L);
+				g_State.setInjectedLuaStates.insert(L);
 			}
 		}
 	}
@@ -79,6 +79,9 @@ static void H_DebugDrawer_Render(DebugDrawer* self, float p2, void* p3, void* p4
 static void(*O_luaL_Register)(lua_State* L, const char* libname, const luaL_Reg* lib) = nullptr;
 static void H_luaL_Register(lua_State* L, const char* libname, const luaL_Reg* lib) {
 	if ( libname != nullptr && strcmp(libname, "sm.debugDraw") == 0 ) {
+		// The render terrain env Lua state is recreated when hopping between different worlds, need to re-inject
+		std::scoped_lock lock(g_State.setInjectedLuaStatesMutex);
+		g_State.setInjectedLuaStates.erase(L);
 		Lua_DebugDraw::Register(L);
 	} else
 		O_luaL_Register(L, libname, lib);
