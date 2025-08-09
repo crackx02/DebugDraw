@@ -41,6 +41,7 @@ This mod adds three extra features:
 ## Screenshots
 
 Here are some extra showcasing screenshots, visualizing enemy pathfinding.  
+(Note: Debug draw calls are commented out in pathfinding Lua scripts, you need to un-comment them in order to see this)  
 
 <img width="476" height="498" alt="pathfind1" src="https://github.com/user-attachments/assets/371dd073-3437-4cfe-af6e-662ce6848535" />
 
