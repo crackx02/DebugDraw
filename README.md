@@ -38,3 +38,13 @@ This mod adds three extra features:
   While this is already stated in the API documentation, the API is not actually present by default.  
   **This is not available if the DLL is removed, check `sm.debugDraw.enabled`!**
 
+## Screenshots
+
+Here are some extra showcasing screenshots, visualizing enemy pathfinding.  
+
+<img width="476" height="498" alt="pathfind1" src="https://github.com/user-attachments/assets/371dd073-3437-4cfe-af6e-662ce6848535" />
+
+<img width="473" height="497" alt="pathfind2" src="https://github.com/user-attachments/assets/71f267b7-babb-4de2-9e09-7888a14596f1" />
+
+<img width="1083" height="594" alt="pathfind3" src="https://github.com/user-attachments/assets/18c1ee91-cad1-46c1-85ae-490574a100f6" />
+
