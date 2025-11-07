@@ -8,6 +8,9 @@ This mod re-implements the disabled `sm.debugDraw` Lua API in Scrap Mechanic.
 
 To use the debug draw features, simply add the `-debugDraw` flag to the game's launch options, then inject the DebugDraw DLL using a DLL injector of your choice.
 
+The mod's Lua API documentation is hosted [here](https://scrapmechanictools.com/customApis/DebugDraw).  
+In case the website is down, the source markdown file for it can be found in the root of this repository (DebugDraw.md).
+
 After injection, you can use the `sm.debugDraw` API as stated in the [API Documentation](https://scrapmechanicdocs.com/docs/Game-Script-Environment/Static-Functions/sm.debugDraw).
 
 ## Notes
