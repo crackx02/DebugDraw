@@ -18,7 +18,7 @@ using namespace SM;
 
 constexpr uintptr Offset_InitializeConsole = 0x02d7a80;
 constexpr uintptr Offset_RegisterDebugDraw = 0x02d7a80;
-constexpr uintptr Offset_DebugDrawer_Render = 0x09ef890;
+constexpr uintptr Offset_DebugDrawer_Render = 0x09efb50;
 constexpr uintptr Offset_PlayState_Cleanup = 0x042dab0;
 
 
