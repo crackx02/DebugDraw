@@ -13,6 +13,7 @@ struct DebugArrow {
 	Vec3 begin;
 	Vec3 end;
 	u8Vec3 color;
+	bool forceDraw;
 };
 
 struct DebugSphere {
@@ -21,6 +22,7 @@ struct DebugSphere {
 	float radius;
 	u8Vec3 color;
 	IcoSphere shape;
+	bool forceDraw;
 };
 
 struct DebugTransform {
@@ -28,6 +30,7 @@ struct DebugTransform {
 	Vec3 origin;
 	Quat rotation;
 	Vec3 scale;
+	bool forceDraw;
 };
 
 class DebugDrawManager {
@@ -36,6 +39,8 @@ class DebugDrawManager {
 		~DebugDrawManager();
 
 		inline bool isEnabled() const {return m_bEnabled;};
+		inline void setEnabled(bool enabled) {m_bEnabled = enabled;};
+		inline void setEnabledOverride(bool enabled) {m_bEnabledOverride = enabled;};
 
 		void render();
 
@@ -51,11 +56,14 @@ class DebugDrawManager {
 
 	private:
 		bool m_bEnabled = false;
+		bool m_bEnabledOverride = false;
 		IcoSphere m_arrBaseSphereLevels[3];
 		std::mutex m_mutex;
 		NullHashMap<uint32, DebugArrow> m_mapArrows;
 		NullHashMap<uint32, DebugSphere> m_mapSpheres;
 		NullHashMap<uint32, DebugTransform> m_mapTransforms;
+
+		inline bool m_isEnabled() const {return m_bEnabled || m_bEnabledOverride;};
 };
 
 extern DebugDrawManager* g_debugDrawManager;

@@ -55,6 +55,9 @@
     <ClCompile Include="src\Lua_DebugDraw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\SM\ChatCommandManager.cpp">
+      <Filter>SM</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\MinHook\src\buffer.h">
@@ -110,6 +113,9 @@
     </ClInclude>
     <ClInclude Include="src\NullHash.hpp">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SM\ChatCommandManager.hpp">
+      <Filter>SM</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

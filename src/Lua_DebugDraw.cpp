@@ -45,11 +45,18 @@ static Quat* CheckQuat(lua_State* L, int index) {
 	return (Quat*)luaL_checkudata(L, index, "Quat");
 }
 
-static bool CheckBoolean(lua_State* L, int index) {
+static bool CheckBoolean(lua_State* L, int index, bool optional = false) {
 	int t = lua_type(L, index);
 	if ( t != LUA_TBOOLEAN )
-		luaL_error(L, "expected boolean, got %s", lua_typename(L, t));
+		luaL_error(L, optional ? "expected boolean or nil, got %s" : "expected boolean, got %s", lua_typename(L, t));
 	return lua_toboolean(L, index);
+}
+
+static bool OptBoolean(lua_State* L, int index, bool def) {
+	int t = lua_type(L, index);
+	if ( t <= LUA_TNIL )
+		return def;
+	return CheckBoolean(L, index, true);
 }
 
 
@@ -91,6 +98,10 @@ void Lua_DebugDraw::Register(lua_State* L) {
 
 	lua_pushstring(L, "drawLine");
 	lua_pushcfunction(L, drawLine);
+	lua_rawset(L, -3);
+
+	lua_pushstring(L, "setEnabledOverride");
+	lua_pushcfunction(L, setEnabledOverride);
 	lua_rawset(L, -3);
 
 	lua_pushstring(L, "enabled");
@@ -173,5 +184,11 @@ int Lua_DebugDraw::drawLine(lua_State* L) {
 	SM::DebugDrawer* pDrawer = SM::DebugDrawer::Get();
 	std::scoped_lock lock(pDrawer->getLock());
 	pDrawer->drawLine(*pBegin, (pEnd != nullptr ? *pEnd : *pBegin + Vec3(0.0f, 0.0f, 1.0f)), color);
+	return 0;
+}
+
+int Lua_DebugDraw::setEnabledOverride(lua_State* L) {
+	CheckArgCount(L, 0, 1);
+	g_debugDrawManager->setEnabledOverride(OptBoolean(L, 1, false));
 	return 0;
 }

@@ -12,6 +12,7 @@ namespace Lua_DebugDraw {
 	int removeArrow(lua_State* L);
 	int removeSphere(lua_State* L);
 	int removeTransform(lua_State* L);
+	int setEnabledOverride(lua_State* L);
 
 	// Extras
 	int drawLine(lua_State* L);

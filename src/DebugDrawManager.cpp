@@ -57,6 +57,7 @@ DebugDrawManager::DebugDrawManager() {
 	LPSTR cmdLine = GetCommandLineA();
 	if ( std::string_view(cmdLine).find("-debugDraw") != std::string::npos )
 		m_bEnabled = true;
+
 	g_debugDrawManager = this;
 }
 
@@ -65,9 +66,6 @@ DebugDrawManager::~DebugDrawManager() {
 }
 
 void DebugDrawManager::render() {
-	if ( !m_bEnabled )
-		return;
-
 	DebugDrawer* pDrawer = DebugDrawer::Get();
 
 	std::scoped_lock lock0(m_mutex);
@@ -75,16 +73,21 @@ void DebugDrawManager::render() {
 
 	// Draw arrows
 	for ( const auto& [k, arrow] : m_mapArrows )
-		DrawArrow(pDrawer, arrow.begin, arrow.end, arrow.color, ArrowHeadLength);
+		if (m_bEnabled || arrow.forceDraw)
+			DrawArrow(pDrawer, arrow.begin, arrow.end, arrow.color, ArrowHeadLength);
 
 	// Draw spheres
 	for ( const auto& [k, sphere] : m_mapSpheres ) {
-		for ( const IcoSphere::Line& line : sphere.shape.getLines() )
-			pDrawer->drawLine(sphere.position + line.begin, sphere.position + line.end, sphere.color);
+		if ( m_bEnabled || sphere.forceDraw )
+			for ( const IcoSphere::Line& line : sphere.shape.getLines() )
+				pDrawer->drawLine(sphere.position + line.begin, sphere.position + line.end, sphere.color);
 	}
 
 	// Draw transforms
 	for ( const auto& [k, transform] : m_mapTransforms ) {
+		if ( !(m_bEnabled || transform.forceDraw) )
+			continue;
+
 		Vec3 x = transform.rotation * Vec3(transform.scale.x, 0.0f, 0.0f);
 		Vec3 y = transform.rotation * Vec3(0.0f, transform.scale.y, 0.0f);
 		Vec3 z = transform.rotation * Vec3(0.0f, 0.0f, transform.scale.z);
@@ -96,8 +99,9 @@ void DebugDrawManager::render() {
 }
 
 void DebugDrawManager::addArrow(const std::string_view& name, const Vec3& begin, const Vec3& end, u8Vec3 color) {
-	if ( !m_bEnabled )
+	if ( !m_isEnabled() )
 		return;
+
 	uint32 hash = XXH32(name.data(), name.size(), 0);
 	std::scoped_lock lock(m_mutex);
 	auto it = m_mapArrows.find(hash);
@@ -108,11 +112,13 @@ void DebugDrawManager::addArrow(const std::string_view& name, const Vec3& begin,
 	elem.begin = begin;
 	elem.end = end;
 	elem.color = color;
+	elem.forceDraw = m_bEnabledOverride;
 }
 
 void DebugDrawManager::addSphere(const std::string_view& name, const Vec3& position, float radius, u8Vec3 color) {
-	if ( !m_bEnabled )
+	if ( !m_isEnabled() )
 		return;
+
 	uint32 hash = XXH32(name.data(), name.size(), 0);
 	std::scoped_lock lock(m_mutex);
 	auto it = m_mapSpheres.find(hash);
@@ -128,11 +134,13 @@ void DebugDrawManager::addSphere(const std::string_view& name, const Vec3& posit
 		elem.radius = radius;
 		elem.shape = IcoSphere(GetSphereSizeLevel(radius), Vec3(radius));
 	}
+	elem.forceDraw = m_bEnabledOverride;
 }
 
 void DebugDrawManager::addTransform(const std::string_view& name, const Vec3& origin, const Quat& rotation, const Vec3& scale) {
-	if ( !m_bEnabled )
+	if ( !m_isEnabled() )
 		return;
+
 	uint32 hash = XXH32(name.data(), name.size(), 0);
 	std::scoped_lock lock(m_mutex);
 	auto it = m_mapTransforms.find(hash);
@@ -143,16 +151,19 @@ void DebugDrawManager::addTransform(const std::string_view& name, const Vec3& or
 	elem.origin = origin;
 	elem.rotation = rotation;
 	elem.scale = scale;
+	elem.forceDraw = m_bEnabledOverride;
 }
 
 void DebugDrawManager::clear(const std::string_view& name) {
 	std::scoped_lock lock(m_mutex);
+
 	if ( name.empty() ) {
 		m_mapArrows.clear();
 		m_mapSpheres.clear();
 		m_mapTransforms.clear();
 		return;
 	}
+
 	{
 		auto it = m_mapArrows.begin();
 		while ( it != m_mapArrows.end() ) {

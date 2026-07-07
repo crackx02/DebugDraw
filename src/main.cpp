@@ -13,6 +13,7 @@
 #include "Lua_DebugDraw.hpp"
 #include "SM/Console.hpp"
 #include "SM/RenderStateManager.hpp"
+#include "SM/ChatCommandManager.hpp"
 
 using namespace SM;
 
@@ -20,6 +21,7 @@ constexpr uintptr Offset_InitializeConsole = 0x02d7a80;
 constexpr uintptr Offset_RegisterDebugDraw = 0x02d7a80;
 constexpr uintptr Offset_DebugDrawer_Render = 0x09efb50;
 constexpr uintptr Offset_PlayState_Cleanup = 0x042dab0;
+constexpr uintptr Offset_ChatCommandManager = 0x06c5cf0;
 
 
 
@@ -34,7 +36,35 @@ static struct {
 
 
 
+// Callbacks //
+
+static std::string OnChatCommand(const ChatCommand::VecParams& vecParams);
+
+static void RegisterChatCommands(ChatCommandManager* self, bool hidden = false) {
+	self->registerOrUpdateCommand("/debugDraw", {}, OnChatCommand, "Switches whether DebugDraw is enabled or not. Note that mods can override this.");
+}
+
+static std::string OnChatCommand(const ChatCommand::VecParams& vecParams) {
+	SM_ASSERT(vecParams.size() != 0);
+
+	std::string_view sCommand = vecParams[0].stringValue;
+	if ( sCommand == "/debugDraw" ) {
+		g_debugDrawManager->setEnabled(!g_debugDrawManager->isEnabled());
+		return std::format("DebugDraw is now {}.", g_State.debugDrawManager.isEnabled() ? "enabled" : "disabled");
+	} else
+		return "Unknown command received";
+}
+
+
+
 // Hooks //
+
+static ChatCommandManager* (*O_ChatCommandManager)(ChatCommandManager*) = nullptr;
+static ChatCommandManager* H_ChatCommandManager(ChatCommandManager* self) {
+	O_ChatCommandManager(self);
+	RegisterChatCommands(self);
+	return self;
+}
 
 static int(*O_luaL_loadstring)(lua_State*, const char*);
 static int H_luaL_loadstring(lua_State* L, const char* str) {
@@ -108,6 +138,9 @@ static void H_InitializeConsole(void* pContraption, void* ptr) {
 	if ( MakeHook(PlayState_Cleanup) != MH_OK )
 		SM_ERROR("Failed to hook PlayState::cleanup!");
 
+	if ( MakeHook(ChatCommandManager) != MH_OK )
+		SM_ERROR("Failed to hook ChatCommandManager!");
+
 	if ( MH_EnableHook(MH_ALL_HOOKS) != MH_OK ) {
 		SM_ERROR("Failed to enable hooks!");
 		if ( pContraption == nullptr )
@@ -130,6 +163,7 @@ static bool Attach() {
 	g_State.bMhInitialized = true;
 	
 	ResolveClassOffset(Console);
+	ResolveClassOffset(ChatCommandManager);
 
 	// Initialize only once the console exists, that way we can properly log stuff
 	if ( Console::Get() == nullptr ) {

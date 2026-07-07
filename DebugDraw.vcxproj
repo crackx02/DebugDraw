@@ -158,6 +158,7 @@
     <ClCompile Include="src\IcoSphere.cpp" />
     <ClCompile Include="src\Lua_DebugDraw.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\SM\ChatCommandManager.cpp" />
     <ClCompile Include="src\SM\Console.cpp" />
     <ClCompile Include="src\SM\LineVertexArray.cpp" />
     <ClCompile Include="src\SM\RenderStateManager.cpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="src\IcoSphere.hpp" />
     <ClInclude Include="src\Lua_DebugDraw.hpp" />
     <ClInclude Include="src\NullHash.hpp" />
+    <ClInclude Include="src\SM\ChatCommandManager.hpp" />
     <ClInclude Include="src\SM\Console.hpp" />
     <ClInclude Include="src\SM\DebugDrawer.hpp" />
     <ClInclude Include="src\SM\LineVertexArray.hpp" />
