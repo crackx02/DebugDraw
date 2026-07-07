@@ -20,12 +20,28 @@ After injection, you can use the `sm.debugDraw` API as stated in the [API Docume
 
 ## Extra Features
 
-This mod adds three extra features:
+This mod adds some extra features:
+
+### Chat Command
+
+The `/debugDraw` chat command can be used in the in-game chat to enable/disable the DebugDraw library at runtime.  
+This allows for avoiding the use of the launch option, which is useful in cases like the mod tool's custom game test feature, where custom launch options are not available to the user.
+
+### API Features
+
 - `sm.debugDraw.enabled`:
   This is a boolean flag which indicates the state of the mod and can be one of three things:
   - `true`: DebugDraw DLL is present and debug drawing features are enabled.
   - `false`: DebugDraw DLL is present but not enabled (launch option not set).
   - `nil`: DebugDraw DLL is not present (debugDraw functions do nothing, extra features below are not available).  
+  **Note that this does not take into account the override state (see the function below).**
+
+- `sm.debugDraw.setEnabledOverride(state)`:  
+  This function is intended to temporarily force-enable the DebugDraw library if it is disabled.  
+  For this, the function is typically called with `state = true`, then `sm.debugDraw` commands are issued before calling this function again with `state = false` to "finish" drawing.  
+  **This function is not available without the DLL, check `sm.debugDraw.enabled`.**  
+  Its parameters are:  
+  - `state`: `boolean/nil`, whether DebugDraw is force-enabled or not. Defaults to `false`.
 
 - `sm.debugDraw.drawLine(begin, end, color)`:  
   This custom function can be used to draw a single line between two positions for a single frame.  
