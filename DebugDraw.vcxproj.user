@@ -5,6 +5,7 @@
     <LocalDebuggerCommandArguments>-dev -debugDraw</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(sm)Release\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommandArgumentsHistory>-dev -debugDraw|</LocalDebuggerCommandArgumentsHistory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerCommand>$(sm)Release\ScrapMechanic.exe</LocalDebuggerCommand>
