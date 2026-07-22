@@ -4,39 +4,39 @@
 #include "SM/DebugDrawer.hpp"
 #include "SM/Console.hpp"
 
-static constexpr Vec3 UP = {0.0f, 0.0f, 1.0f};
-static constexpr u8Vec3 WHITE = {0xFF, 0xFF, 0xFF};
+static constexpr Vec3 UP = { 0.0f, 0.0f, 1.0f };
+static constexpr u8Vec3 WHITE = { 0xFF, 0xFF, 0xFF };
 
 inline static void CheckArgCount(lua_State* L, int min, int max) {
 	int top = lua_gettop(L);
-	if ( top < min )
+	if (top < min)
 		luaL_error(L, "expected at least %i arguments, got %i", min, top);
-	if ( top > max )
+	if (top > max)
 		luaL_error(L, "expected at most %i arguments, got %i", max, top);
 }
 
 static std::string_view CheckString(lua_State* L, int index, bool optional = false) {
 	int t = lua_type(L, index);
-	if ( t <= LUA_TNIL && optional )
+	if (t <= LUA_TNIL && optional)
 		return "";
-	if ( t != LUA_TSTRING )
-		if ( optional )
+	if (t != LUA_TSTRING)
+		if (optional)
 			luaL_error(L, "expected string or nil, got %s", lua_typename(L, t));
 		else
 			luaL_error(L, "expected string, got %s", lua_typename(L, t));
 	uint64 len = 0;
 	const char* str = luaL_checklstring(L, index, &len);
-	return {str, len};
+	return { str, len };
 }
 
 static Vec3* CheckVec3(lua_State* L, int index, bool optional = false) {
-	if ( lua_type(L, index) <= LUA_TNIL && optional )
+	if (lua_type(L, index) <= LUA_TNIL && optional)
 		return nullptr;
 	return (Vec3*)luaL_checkudata(L, index, "Vec3");
 }
 
 static u8Vec3 OptColor(lua_State* L, int index, u8Vec3 def) {
-	if ( lua_type(L, index) <= LUA_TNIL )
+	if (lua_type(L, index) <= LUA_TNIL)
 		return def;
 	return u8Vec3(*(Vec3*)luaL_checkudata(L, index, "Color") * 255.0f);
 }
@@ -47,19 +47,30 @@ static Quat* CheckQuat(lua_State* L, int index) {
 
 static bool CheckBoolean(lua_State* L, int index, bool optional = false) {
 	int t = lua_type(L, index);
-	if ( t != LUA_TBOOLEAN )
+	if (t != LUA_TBOOLEAN)
 		luaL_error(L, optional ? "expected boolean or nil, got %s" : "expected boolean, got %s", lua_typename(L, t));
 	return lua_toboolean(L, index);
 }
 
 static bool OptBoolean(lua_State* L, int index, bool def) {
 	int t = lua_type(L, index);
-	if ( t <= LUA_TNIL )
+	if (t <= LUA_TNIL)
 		return def;
 	return CheckBoolean(L, index, true);
 }
 
-
+static int Meta_Index(lua_State* L) {
+	if (lua_type(L, 2) == LUA_TSTRING) {
+		const char* key = lua_tostring(L, 2);
+		if (strcmp(key, "enabled") == 0) {
+			lua_pushboolean(L, g_debugDrawManager->isEnabled());
+			return 1;
+		}
+	}
+	lua_pushvalue(L, 2);
+	lua_rawget(L, 1);
+	return 1;
+}
 
 void Lua_DebugDraw::Register(lua_State* L) {
 	lua_getglobal(L, "sm");
@@ -104,15 +115,23 @@ void Lua_DebugDraw::Register(lua_State* L) {
 	lua_pushcfunction(L, setEnabledOverride);
 	lua_rawset(L, -3);
 
-	lua_pushstring(L, "enabled");
-	lua_pushboolean(L, g_debugDrawManager->isEnabled());
-	lua_rawset(L, -3);
+	lua_newtable(L);
+	lua_pushcfunction(L, Meta_Index);
+	lua_setfield(L, -2, "__index");
+	lua_pushcfunction(L, [](lua_State* L) -> int {
+		if (lua_type(L, 2) == LUA_TSTRING) {
+			const char* key = lua_tostring(L, 2);
+			if (strcmp(key, "enabled") == 0) {
+				return luaL_error(L, "sm.debugDraw.enabled is read-only");
+			}
+		}
+		lua_rawset(L, 1);
+		return 0;
+		});
+	lua_setfield(L, -2, "__newindex");
+	lua_setmetatable(L, -2);
 
-	lua_pushvalue(L, -2);
-	lua_pushvalue(L, -2);
-	lua_rawset(L, -5);
-	lua_pop(L, -2);
-	lua_pop(L, -2);
+	lua_rawset(L, -3);
 
 	SM_LOG("DebugDraw registered");
 }
@@ -180,7 +199,7 @@ int Lua_DebugDraw::drawLine(lua_State* L) {
 	CheckArgCount(L, 1, 3);
 	Vec3* pBegin = CheckVec3(L, 1);
 	Vec3* pEnd = CheckVec3(L, 2, true);
-	u8Vec3 color = OptColor(L, 3, {0xFF, 0xFF, 0xFF});
+	u8Vec3 color = OptColor(L, 3, { 0xFF, 0xFF, 0xFF });
 	SM::DebugDrawer* pDrawer = SM::DebugDrawer::Get();
 	std::scoped_lock lock(pDrawer->getLock());
 	pDrawer->drawLine(*pBegin, (pEnd != nullptr ? *pEnd : *pBegin + Vec3(0.0f, 0.0f, 1.0f)), color);
